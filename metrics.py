@@ -7,7 +7,7 @@ def binary_accuraty(y_pred,y_true, treshold=0.5, mask=None):
         if mask is not None:
             y_true = y_true * mask
             y_pred = y_pred * mask
-        return (y_pred == y_true).sum() / y_true.size()[0]
+        return (y_pred == y_true).sum() / torch.numel(y_true)
 
 
 def accuraty(y_pred,y_true, mask=None):
