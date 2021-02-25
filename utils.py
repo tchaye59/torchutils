@@ -1,3 +1,5 @@
+import sys
+from time import sleep
 from typing import List
 
 import torch
@@ -16,7 +18,7 @@ def to_device(data, device=None):
 
 
 def history_to_string(history):
-    return ' - '.join([f'{key}: {history[key][-1].item():.2f}' for key in history])
+    return ' - '.join([f'{key}: {history[key][-1].item():.3f}' for key in history])
 
 
 class BaseModel(nn.Module):
@@ -46,29 +48,43 @@ class BaseModel(nn.Module):
         history = {}
         history_sum = {}
         train_steps = len(train_loader)
-        # Training
-        [callback.on_train_begin() for callback in self.callbacks]
+        val_steps = len(val_loader) if val_loader is not None else 0
+
         for epoch in range(epochs):
             print(f'Epoch: {epoch + 1}/{epochs}:')
             [callback.on_epoch_begin(epoch) for callback in self.callbacks]
+
+            # Training
+            [callback.on_train_begin() for callback in self.callbacks]
             for batch_idx, batch in enumerate(train_loader):
                 info = self.training_step(batch)
                 self.update_history(history, history_sum, info, batch_idx, train_steps)
                 if batch_idx % 1 == 0:
-                    print(f'{batch_idx + 1}/{len(train_loader)}  {history_to_string(history)}\r', end='')
+                    print(f'{batch_idx + 1}/{train_steps}  {history_to_string(history)}', end='\r', file=sys.stdout,
+                          flush=True)
+                    sys.stdout.flush()
+            [callback.on_train_end(history) for callback in self.callbacks]
+
+            # Validation
+            if val_loader is not None:
+                [callback.on_test_begin(epoch, ) for callback in self.callbacks]
+                for batch_idx, batch in enumerate(val_loader):
+                    info = self.validation_step(batch)
+                    self.update_history(history, history_sum, info, batch_idx, val_steps)
+                [callback.on_test_end(history) for callback in self.callbacks]
+            print(f'{train_steps}/{train_steps}  {history_to_string(history)}', end='\r', file=sys.stdout,flush=True)
+
             [callback.on_epoch_end(epoch, history) for callback in self.callbacks]
             print()
             history_sum = {}
 
-        [callback.on_train_end(history) for callback in self.callbacks]
-
         return history
 
-    def update_history(self, history, history_sum, info, batch_idx,train_steps):
+    def update_history(self, history, history_sum, info, batch_idx, train_steps):
         for key in info:
             ss = history_sum.get(key, 0) + info[key]
             history_sum[key] = ss
-            if batch_idx+1 == train_steps:
+            if batch_idx + 1 == train_steps:
                 data = history.get(key, [])
                 data.append(ss / (batch_idx + 1))
                 history[key] = data
@@ -90,11 +106,11 @@ class BaseModel(nn.Module):
         history = {}
         with torch.no_grad():
             for key in self.metrics_fn:
-                history[f'val_{key}'] = self.metrics_fn[key](y_true, y_pred)
+                history[key] = self.metrics_fn[key](y_pred, y_true)
             if type(loss) == dict:
                 history.update(loss)
             else:
-                history['val_loss'] = loss
+                history['loss'] = loss
         return history
 
     def validation_step(self, batch):
@@ -106,20 +122,9 @@ class BaseModel(nn.Module):
             # build metrics
             history = {}
             for key in self.metrics_fn:
-                history[key] = self.metrics_fn[key](y_true, y_pred)
+                history[f'val_{key}'] = self.metrics_fn[key](y_pred, y_true)
             if type(loss) == dict:
                 history.update(loss)
             else:
-                history['loss'] = loss
+                history['val_loss'] = loss
             return history
-
-    def validation_epoch_end(self, outputs):
-        with torch.no_grad():
-            batch_losses = [x['val_loss'] for x in outputs]
-            epoch_loss = torch.stack(batch_losses).mean()  # Combine losses
-            batch_accs = [x['val_acc'] for x in outputs]
-            epoch_acc = torch.stack(batch_accs).mean()  # Combine accuracies
-            return {'val_loss': epoch_loss.item(), 'val_acc': epoch_acc.item()}
-
-    def epoch_end(self, epoch, result):
-        print("Epoch [{}], val_loss: {:.4f}, val_acc: {:.4f}".format(epoch, result['val_loss'], result['val_acc']))

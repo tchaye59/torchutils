@@ -32,11 +32,11 @@ class Callback(object):
         """Called at the end of training.
         """
 
-    def on_test_begin(self, ):
+    def on_test_begin(self, epoch):
         """Called at the beginning of evaluation or validation.
         """
 
-    def on_test_end(self, logs=None):
+    def on_test_end(self, epoch, logs=None):
         """Called at the end of evaluation or validation.
         """
 

@@ -5,12 +5,16 @@ from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
+from torchvision import transforms as T
 
 from callbacks import ModelCheckpoint
-from metrics import accuraty
+from losses import binary_cross_entropy_focal_loss
+from metrics import accuraty, binary_accuraty
 from utils import BaseModel
 
-dataset = MNIST(root='data/', download=True, transform=ToTensor())
+dataset = MNIST(root='data/', download=True, transform=ToTensor(),
+                target_transform=T.Lambda(lambda y: torch.tensor([float(y == 8), ])), )
+
 val_size = 10000
 train_size = len(dataset) - val_size
 
@@ -42,23 +46,25 @@ class MnistModel(BaseModel):
         out = F.relu(out)
         # Get predictions using output layer
         out = self.linear2(out)
-        return out
+        return torch.sigmoid(out)
 
 
 input_size = 784
 hidden_size = 32
-num_classes = 10
+num_classes = 1
 model = MnistModel(input_size, hidden_size, num_classes)
 
 optim = torch.optim.Adam(model.parameters(), 0.001)
 
 callbacks = [
-    ModelCheckpoint('model.pth', mode='min', verbose=False)
+    ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
-model.compile(loss=F.cross_entropy,
+model.compile(loss=binary_cross_entropy_focal_loss,
               optimizer=optim,
-              metrics={'acc': accuraty},
+              metrics={'acc': binary_accuraty},
               callbacks=callbacks)
 
-model.fit(train_loader, epochs=20)
+model.fit(train_loader,
+          epochs=20,
+          val_loader=val_loader)
