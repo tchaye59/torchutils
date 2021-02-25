@@ -17,8 +17,8 @@ def to_device(data, device=None):
     return data.to(device, non_blocking=True)
 
 
-def history_to_string(history):
-    return ' - '.join([f'{key}: {history[key][-1].item():.3f}' for key in history])
+def epoch_info_to_string(info,batch_idx):
+    return ' - '.join([f'{key}: {info[key].item()/(batch_idx+1):.3f}' for key in info])
 
 
 class BaseModel(nn.Module):
@@ -46,11 +46,13 @@ class BaseModel(nn.Module):
         assert self.loss_fn, "loss function not defined"
 
         history = {}
-        history_sum = {}
+
         train_steps = len(train_loader)
         val_steps = len(val_loader) if val_loader is not None else 0
 
         for epoch in range(epochs):
+            epoch_info_sum = {}
+
             print(f'Epoch: {epoch + 1}/{epochs}:')
             [callback.on_epoch_begin(epoch) for callback in self.callbacks]
 
@@ -58,11 +60,10 @@ class BaseModel(nn.Module):
             [callback.on_train_begin() for callback in self.callbacks]
             for batch_idx, batch in enumerate(train_loader):
                 info = self.training_step(batch)
-                self.update_history(history, history_sum, info, batch_idx, train_steps)
+                self.update_history(history, epoch_info_sum, info, batch_idx, train_steps)
                 if batch_idx % 1 == 0:
-                    print(f'{batch_idx + 1}/{train_steps}  {history_to_string(history)}', end='\r', file=sys.stdout,
+                    print(f'{batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum,batch_idx)}', end='\r', file=sys.stdout,
                           flush=True)
-                    sys.stdout.flush()
             [callback.on_train_end(history) for callback in self.callbacks]
 
             # Validation
@@ -70,21 +71,21 @@ class BaseModel(nn.Module):
                 [callback.on_test_begin(epoch, ) for callback in self.callbacks]
                 for batch_idx, batch in enumerate(val_loader):
                     info = self.validation_step(batch)
-                    self.update_history(history, history_sum, info, batch_idx, val_steps)
+                    self.update_history(history, epoch_info_sum, info, batch_idx, val_steps)
                 [callback.on_test_end(history) for callback in self.callbacks]
-            print(f'{train_steps}/{train_steps}  {history_to_string(history)}', end='\r', file=sys.stdout,flush=True)
+            print(f'{train_steps}/{train_steps}  {epoch_info_to_string(epoch_info_sum,train_steps)}', end='\r', file=sys.stdout, flush=True)
 
             [callback.on_epoch_end(epoch, history) for callback in self.callbacks]
             print()
-            history_sum = {}
+            epoch_info_sum = {}
 
         return history
 
-    def update_history(self, history, history_sum, info, batch_idx, train_steps):
+    def update_history(self, history, epoch_info_sum, info, batch_idx, train_steps):
         for key in info:
-            ss = history_sum.get(key, 0) + info[key]
-            history_sum[key] = ss
-            if batch_idx + 1 == train_steps:
+            ss = epoch_info_sum.get(key, 0) + info[key]
+            epoch_info_sum[key] = ss
+            if history is not None and batch_idx + 1 == train_steps:
                 data = history.get(key, [])
                 data.append(ss / (batch_idx + 1))
                 history[key] = data
@@ -128,3 +129,16 @@ class BaseModel(nn.Module):
             else:
                 history['val_loss'] = loss
             return history
+
+    def evaluate(self, data_loader, ):
+        history = {}
+        history_sum = {}
+        steps = len(data_loader)
+        for batch_idx, batch in enumerate(data_loader):
+            info = self.validation_step(batch)
+            self.update_history(history, history_sum, info, batch_idx, steps)
+            if batch_idx % 1 == 0:
+                print(f'Evaluate: {batch_idx + 1}/{steps}  {epoch_info_to_string(history_sum,batch_idx)}', end='\r', file=sys.stdout,
+                      flush=True)
+        print()
+        return history

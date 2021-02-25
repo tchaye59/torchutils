@@ -62,4 +62,4 @@ model.compile(loss=cross_entropy_focal_loss,
               metrics={'acc': accuraty},
               callbacks=callbacks)
 
-model.fit(train_loader, epochs=20)
+model.fit(train_loader, epochs=20,val_loader=val_loader)

@@ -66,5 +66,7 @@ model.compile(loss=binary_cross_entropy_focal_loss,
               callbacks=callbacks)
 
 model.fit(train_loader,
-          epochs=20,
+          epochs=5,
           val_loader=val_loader)
+
+model.evaluate(train_loader)
