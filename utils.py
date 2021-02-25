@@ -1,11 +1,10 @@
 import sys
-from time import sleep
 from typing import List
-
 import torch
 import torch.nn as nn
-
 from callbacks import Callback
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def to_device(data, device=None):
@@ -17,8 +16,8 @@ def to_device(data, device=None):
     return data.to(device, non_blocking=True)
 
 
-def epoch_info_to_string(info,batch_idx):
-    return ' - '.join([f'{key}: {info[key].item()/(batch_idx+1):.3f}' for key in info])
+def epoch_info_to_string(info, batch_idx):
+    return ' - '.join([f'{key}: {info[key].item() / (batch_idx + 1):.3f}' for key in info])
 
 
 class BaseModel(nn.Module):
@@ -59,10 +58,12 @@ class BaseModel(nn.Module):
             # Training
             [callback.on_train_begin() for callback in self.callbacks]
             for batch_idx, batch in enumerate(train_loader):
+                batch = to_device(batch)
                 info = self.training_step(batch)
                 self.update_history(history, epoch_info_sum, info, batch_idx, train_steps)
                 if batch_idx % 1 == 0:
-                    print(f'{batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum,batch_idx)}', end='\r', file=sys.stdout,
+                    print(f'{batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx)}', end='\r',
+                          file=sys.stdout,
                           flush=True)
             [callback.on_train_end(history) for callback in self.callbacks]
 
@@ -70,10 +71,12 @@ class BaseModel(nn.Module):
             if val_loader is not None:
                 [callback.on_test_begin(epoch, ) for callback in self.callbacks]
                 for batch_idx, batch in enumerate(val_loader):
+                    batch = to_device(batch)
                     info = self.validation_step(batch)
                     self.update_history(history, epoch_info_sum, info, batch_idx, val_steps)
                 [callback.on_test_end(history) for callback in self.callbacks]
-            print(f'{train_steps}/{train_steps}  {epoch_info_to_string(epoch_info_sum,train_steps)}', end='\r', file=sys.stdout, flush=True)
+            print(f'{train_steps}/{train_steps}  {epoch_info_to_string(epoch_info_sum, train_steps)}', end='\r',
+                  file=sys.stdout, flush=True)
 
             [callback.on_epoch_end(epoch, history) for callback in self.callbacks]
             print()
@@ -135,10 +138,12 @@ class BaseModel(nn.Module):
         history_sum = {}
         steps = len(data_loader)
         for batch_idx, batch in enumerate(data_loader):
+            batch = to_device(batch)
             info = self.validation_step(batch)
             self.update_history(history, history_sum, info, batch_idx, steps)
             if batch_idx % 1 == 0:
-                print(f'Evaluate: {batch_idx + 1}/{steps}  {epoch_info_to_string(history_sum,batch_idx)}', end='\r', file=sys.stdout,
+                print(f'Evaluate: {batch_idx + 1}/{steps}  {epoch_info_to_string(history_sum, batch_idx)}', end='\r',
+                      file=sys.stdout,
                       flush=True)
         print()
         return history
