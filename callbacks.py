@@ -1,4 +1,5 @@
 import torch
+import dill
 
 from typing import TYPE_CHECKING
 
@@ -76,6 +77,6 @@ class ModelCheckpoint(Callback):
         if comp:
             self.last_value = val
             if self.save_weights_only:
-                torch.save(self.model.state_dict(), self.filepath)
+                torch.save(self.model.state_dict(), self.filepath, pickle_module=dill)
             else:
-                torch.save(self.model, self.filepath)
+                torch.save(self.model, self.filepath, pickle_module=dill)
