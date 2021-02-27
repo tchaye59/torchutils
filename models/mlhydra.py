@@ -99,11 +99,13 @@ class MLHydra(nn.Module):
     def update_history(self, history, epoch_info_sum, info, batch_idx, train_steps, head_idx):
         for key in info:
             tmp_key = f'{key}{head_idx + 1}'
-            ss = epoch_info_sum.get(tmp_key, 0) + info[key]
+            val = info[key].detach()
+            ss = epoch_info_sum.get(tmp_key, 0) + val
             epoch_info_sum[tmp_key] = ss
             if history is not None and batch_idx + 1 == train_steps:
                 data = history.get(tmp_key, [])
-                data.append(ss / (batch_idx + 1))
+                ss = float((ss / (batch_idx + 1)).cpu().numpy())
+                data.append(ss)
                 history[tmp_key] = data
 
     def evaluate(self, data_loader, ):
