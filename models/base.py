@@ -19,8 +19,8 @@ def to_device(data, device=None):
 
 
 def load_model(path, device=None, pickle_module=dill):
-    model = torch.load(path, pickle_module=pickle_module, map_location=torch.device('cpu'))
-    return to_device(model, device)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    return torch.load(path, pickle_module=pickle_module, map_location=torch.device(device))
 
 
 def epoch_info_to_string(info, batch_idx):
