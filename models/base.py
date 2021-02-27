@@ -96,11 +96,14 @@ class BaseModel(nn.Module):
 
     def update_history(self, history, epoch_info_sum, info, batch_idx, train_steps):
         for key in info:
-            ss = epoch_info_sum.get(key, 0) + info[key]
+            val = info[key].detach()
+            # if val.numel() > 1:
+            #    val = val.mean()
+            ss = epoch_info_sum.get(key, 0) + val
             epoch_info_sum[key] = ss
             if history is not None and batch_idx + 1 == train_steps:
                 data = history.get(key, [])
-                data.append(ss / (batch_idx + 1))
+                data.append((ss / (batch_idx + 1)).numpy())
                 history[key] = data
 
     def training_step(self, batch):

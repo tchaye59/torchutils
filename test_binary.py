@@ -10,7 +10,7 @@ from torchvision import transforms as T
 from callbacks import ModelCheckpoint
 from losses import binary_cross_entropy_focal_loss
 from metrics import accuraty, binary_accuraty
-from utils import BaseModel
+from models import BaseModel
 
 dataset = MNIST(root='data/', download=True, transform=ToTensor(),
                 target_transform=T.Lambda(lambda y: torch.tensor([float(y == 8), ])), )

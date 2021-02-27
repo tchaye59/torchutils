@@ -8,7 +8,7 @@ from torchvision.transforms import ToTensor
 from torchvision import transforms as T
 
 from callbacks import ModelCheckpoint
-from losses import binary_cross_entropy_focal_loss, cross_entropy_focal_loss
+from losses import binary_cross_entropy_focal_loss, cross_entropy_focal_loss, binary_cross_entropy_weighted_focal_loss
 from metrics import accuraty, binary_accuraty
 from models.base import BaseModel
 from models.mlhydra import MLHydra
@@ -95,7 +95,7 @@ def get_head(idx, input_size):
     ]
 
     model.compile(
-        loss=binary_cross_entropy_focal_loss,
+        loss=binary_cross_entropy_weighted_focal_loss,
         optimizer=optim,
         metrics={f'acc': binary_accuraty}, callbacks=callbacks
     )
