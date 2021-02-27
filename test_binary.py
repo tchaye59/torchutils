@@ -60,10 +60,10 @@ callbacks = [
     ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
-model.compile(loss=binary_cross_entropy_focal_loss,
-              optimizer=optim,
-              metrics={'acc': binary_accuraty},
-              callbacks=callbacks)
+model = model.compile(loss=binary_cross_entropy_focal_loss,
+                      optimizer=optim,
+                      metrics={'acc': binary_accuraty},
+                      callbacks=callbacks)
 
 model.fit(train_loader,
           epochs=5,

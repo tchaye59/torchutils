@@ -1,5 +1,7 @@
 import sys
 from typing import List
+
+import dill
 import torch
 import torch.nn as nn
 from callbacks import Callback
@@ -14,6 +16,11 @@ def to_device(data, device=None):
     if isinstance(data, (list, tuple)):
         return [to_device(x, device) for x in data]
     return data.to(device, non_blocking=True)
+
+
+def load_model(path, device=None, pickle_module=dill):
+    model = torch.load(path, pickle_module=pickle_module, map_location=torch.device('cpu'))
+    return to_device(model, device)
 
 
 def epoch_info_to_string(info, batch_idx):
@@ -38,12 +45,13 @@ class BaseModel(nn.Module):
         with torch.no_grad():
             return self(X)
 
-    def compile(self, metrics={}, loss=None, optimizer=None, callbacks: List[Callback] = []):
+    def compile(self, metrics={}, loss=None, optimizer=None, callbacks: List[Callback] = [], device=None):
         self.metrics_fn = metrics
         self.loss_fn = loss
         self.optimizer = optimizer
         self.callbacks = callbacks
         [callback.set_model(self) for callback in callbacks]
+        return to_device(self, device)
 
     def fit(self, train_loader, epochs=1, val_loader=None, ):
 
