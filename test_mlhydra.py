@@ -106,9 +106,9 @@ heads = [get_head(i, backbone.out_features_size) for i in range(num_classes)]
 
 hydra = MLHydra(backbone, heads)
 
-hydra.fit_backbone(train_loader,
-                   epochs=2,
-                   val_loader=val_loader)
+# hydra.fit_backbone(train_loader,
+#                    epochs=2,
+#                    val_loader=val_loader)
 
 hydra.fit_heads(train_loader,
                 epochs=2,

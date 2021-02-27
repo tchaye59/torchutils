@@ -15,7 +15,7 @@ class MLHydra(nn.Module):
     def forward(self, X):
         _, X = self.backbone(X)
         pred = [head(X) for head in self.heads]
-        return torch.stack(pred,1).squeeze(-1)
+        return torch.stack(pred, 1).squeeze(-1)
 
     def predict(self, X):
         self.eval()
@@ -25,7 +25,6 @@ class MLHydra(nn.Module):
     def fit_backbone(self, train_loader, epochs=1, val_loader=None):
         # set trainable
         print('Training backbone:')
-        self.backbone.requires_grad = True
         return self.backbone.fit(train_loader, epochs, val_loader)
 
     def fit_heads(self, train_loader, epochs=1, val_loader=None, callbacks: List[Callback] = []):
@@ -35,7 +34,6 @@ class MLHydra(nn.Module):
 
         # disable gradient on backbone
         print('Training heads:')
-        self.backbone.requires_grad = False
 
         history = {}
 
@@ -52,7 +50,8 @@ class MLHydra(nn.Module):
             [[callback.on_epoch_begin(epoch) for callback in head.callbacks] for head in self.heads]
             for batch_idx, batch in enumerate(train_loader):
                 X, y = to_device(batch)
-                _, X = self.backbone(X)
+                with torch.no_grad():
+                    _, X = self.backbone(X)
                 X = X.detach()
                 for head_idx, head_model in enumerate(self.heads):
                     label = (y == head_idx).unsqueeze(1).float()
