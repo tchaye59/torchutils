@@ -111,7 +111,8 @@ class BaseModel(nn.Module):
             epoch_info_sum[key] = ss
             if history is not None and batch_idx + 1 == train_steps:
                 data = history.get(key, [])
-                data.append((ss / (batch_idx + 1)).cpu().numpy())
+                ss = float((ss / (batch_idx + 1)).cpu().numpy())
+                data.append(ss)
                 history[key] = data
 
     def training_step(self, batch):
