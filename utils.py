@@ -15,7 +15,7 @@ class RandomBalancedSampler():
     def sample(self):
         labels = list(self.indexes.keys())
         l_size = len(labels)
-        while self.num_iter <= len(self):
+        while self.num_iter < len(self):
             lidx = random.randint(0, l_size)
             arr = [random.choice(self.indexes[labels[i % l_size]]) for i in range(lidx, lidx + self.batch_size)]
             random.shuffle(arr)

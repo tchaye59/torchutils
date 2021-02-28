@@ -60,14 +60,13 @@ model = MnistModel(input_size, hidden_size, num_classes)
 optim = torch.optim.Adam(model.parameters(), 0.001)
 
 callbacks = [
-    ModelCheckpoint('model.pth', mode='min', verbose=False)
+    ModelCheckpoint('model.pth', monitor='acc', mode='max', verbose=False)
 ]
 
 model.compile(loss=cross_entropy_focal_loss,
               optimizer=optim,
               metrics={'acc': accuraty},
               callbacks=callbacks)
-
 
 if __name__ == '__main__':
     model.fit(train_loader, epochs=20, val_loader=val_loader)
