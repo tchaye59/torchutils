@@ -5,11 +5,11 @@ from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-
+from utils import *
 from callbacks import ModelCheckpoint
 from losses import cross_entropy_focal_loss
 from metrics import accuraty
-from utils import BaseModel
+from models import *
 
 dataset = MNIST(root='data/', download=True, transform=ToTensor())
 val_size = 10000
@@ -18,9 +18,15 @@ train_size = len(dataset) - val_size
 train_ds, val_ds = random_split(dataset, [train_size, val_size])
 len(train_ds), len(val_ds)
 
+labels = [y for _, y in train_ds]
+
 batch_size = 128
 
-train_loader = DataLoader(train_ds, batch_size, shuffle=True, num_workers=0, pin_memory=True)
+train_loader = DataLoader(train_ds,
+                          batch_size,
+                          # batch_sampler=RandomBalancedSampler(list(range(len(labels))), labels, batch_size=batch_size),
+                          shuffle=True,
+                          num_workers=0, pin_memory=True)
 val_loader = DataLoader(val_ds, batch_size * 2, num_workers=0, pin_memory=True)
 
 
@@ -62,4 +68,4 @@ model.compile(loss=cross_entropy_focal_loss,
               metrics={'acc': accuraty},
               callbacks=callbacks)
 
-model.fit(train_loader, epochs=20,val_loader=val_loader)
+model.fit(train_loader, epochs=20, val_loader=val_loader)
