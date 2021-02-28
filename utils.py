@@ -1,8 +1,7 @@
-from torch.utils.data.sampler import Sampler
 import random
 
 
-class RandomBalancedSampler:
+class RandomBalancedSampler():
 
     def __init__(self, idx, label, batch_size):
         self.batch_size = batch_size
@@ -18,7 +17,10 @@ class RandomBalancedSampler:
         l_size = len(labels)
         while self.num_iter <= len(self):
             lidx = random.randint(0, l_size)
-            yield [random.choice(self.indexes[labels[i % l_size]]) for i in range(lidx, lidx + self.batch_size)]
+            arr = [random.choice(self.indexes[labels[i % l_size]]) for i in range(lidx, lidx + self.batch_size)]
+            random.shuffle(arr)
+            assert len(arr) == self.batch_size, self.batch_size
+            yield arr
             self.num_iter += 1
         self.num_iter = 0
 
