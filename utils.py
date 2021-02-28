@@ -12,7 +12,6 @@ class RandomBalancedSampler:
         self.indexes = indexes
         self.size = len(idx)
         self.num_iter = 0
-        self.sampler = self.sample()
 
     def sample(self):
         labels = list(self.indexes.keys())
@@ -24,7 +23,7 @@ class RandomBalancedSampler:
         self.num_iter = 0
 
     def __iter__(self):
-        return iter(self.sampler)
+        return iter(self.sample())
 
     def __len__(self):
         return self.size // self.batch_size
