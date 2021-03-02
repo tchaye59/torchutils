@@ -68,7 +68,6 @@ class BaseModel(nn.Module):
         for epoch in range(epochs):
             epoch_info_sum = {}
             steps = 0
-            info = {}
 
             print(f'Epoch: {epoch + 1}/{epochs}:')
             [callback.on_epoch_begin(epoch) for callback in self.callbacks]
@@ -90,6 +89,7 @@ class BaseModel(nn.Module):
                 print(f'Training: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, steps)}',
                       end='\r', file=sys.stdout, flush=True)
             [callback.on_train_end(history) for callback in self.callbacks]
+
             # Validation
             if val_loader is not None:
                 epoch_info_sum = {}
