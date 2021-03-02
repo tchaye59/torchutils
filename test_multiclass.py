@@ -23,10 +23,10 @@ labels = [y for _, y in train_ds]
 batch_size = 128
 
 train_loader = DataLoader(train_ds,
-                          # batch_size,
-                          batch_sampler=RandomBalancedSampler(list(range(len(labels))), labels, batch_size=batch_size),
-                          # shuffle=True,
-                          num_workers=2, pin_memory=True)
+                          batch_size,
+                          # batch_sampler=RandomBalancedSampler(list(range(len(labels))), labels, batch_size=batch_size),
+                          shuffle=True,
+                          num_workers=0, pin_memory=True)
 val_loader = DataLoader(val_ds, batch_size * 2, num_workers=4, pin_memory=True)
 
 
@@ -69,4 +69,6 @@ model.compile(loss=cross_entropy_focal_loss,
               callbacks=callbacks)
 
 if __name__ == '__main__':
-    model.fit(train_loader, epochs=20, val_loader=val_loader)
+    model.fit(train_loader,
+              epochs=20,
+              val_loader=val_loader)
