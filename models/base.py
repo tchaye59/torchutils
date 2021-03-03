@@ -54,7 +54,7 @@ class BaseModel(nn.Module):
         [callback.set_model(self) for callback in callbacks]
         return to_device(self, device)
 
-    def fit(self, train_loader, epochs=1, val_loader=None, accumulation=1):
+    def fit(self, train_loader, epochs=1, val_loader=None, accum=1, accum_mode=1):
 
         assert self.optimizer, "Optimizer not defined"
         assert self.loss_fn, "loss function not defined"
@@ -67,26 +67,26 @@ class BaseModel(nn.Module):
 
         for epoch in range(epochs):
             epoch_info_sum = {}
-            steps = 0
+            losses = {}
 
             print(f'Epoch: {epoch + 1}/{epochs}:')
             [callback.on_epoch_begin(epoch) for callback in self.callbacks]
             # Training
             [callback.on_train_begin() for callback in self.callbacks]
 
+            max_accum = accum
             for batch_idx, batch in enumerate(train_loader):
-
                 is_last_step = (batch_idx + 1) >= train_steps
-                accum_step = (accumulation - 1) if is_last_step else batch_idx % accumulation
+                accum_step = batch_idx % accum
+                if accum_step == 0:
+                    max_accum = accum if batch_idx + accum < train_steps else train_steps - batch_idx
 
                 batch = to_device(batch)
-                info = self.training_step(batch, accum_step, accumulation)
+                losses, info = self.training_step(batch, accum_step, max_accum, losses=losses, accum_mode=accum_mode)
 
-                if accum_step == (accumulation - 1) or is_last_step:
-                    steps += 1
-                    self.update_history(history, epoch_info_sum, info, n_steps=steps, epoch_end=is_last_step)
+                self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=is_last_step)
 
-                print(f'Training: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, steps)}',
+                print(f'Training: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',
                       end='\r', file=sys.stdout, flush=True)
             [callback.on_train_end(history) for callback in self.callbacks]
 
@@ -126,7 +126,7 @@ class BaseModel(nn.Module):
                 ss = epoch_info_sum.get(key, 0) + info[key].detach()
                 epoch_info_sum[key] = ss
 
-    def training_step(self, batch, accum_step, accum):
+    def training_step(self, batch, accum_step, accum, losses={}, accum_mode=1):
         X, y_true = batch
         y_true = y_true.detach()
         X = X.detach()
@@ -134,15 +134,35 @@ class BaseModel(nn.Module):
         if accum_step == 0:
             self.optimizer.zero_grad()
         y_pred = self(X)
-        if accum_step != (accum - 1):
-            return {}
         loss = self.loss_fn(y_pred, y_true)
+
+        # accumulate losses
         if type(loss) == dict:
             for key in loss:
-                loss[key].backward()
+                arr = losses.get(key, [])
+                arr.append(loss[key])
+                losses[key] = arr
         else:
-            loss.backward()
-        self.optimizer.step()
+            arr = losses.get('loss', [])
+            arr.append(loss)
+            losses['loss'] = arr
+
+        if accum_mode != 0:
+            # fill gradients
+            if type(loss) == dict:
+                [(loss[key] / accum).backward() for key in loss]
+            else:
+                (loss / accum).backward()
+
+        if accum_step == (accum - 1):
+            # fill gradients
+            if accum_mode == 0:
+                for key in losses:
+                    l = sum(losses[key]) / len(losses[key])
+                    l.backward()
+            # update weights
+            self.optimizer.step()
+            losses = {}
 
         # build metrics
         history = {}
@@ -153,7 +173,7 @@ class BaseModel(nn.Module):
                 history.update(loss)
             else:
                 history['loss'] = loss
-        return history
+        return losses, history
 
     def validation_step(self, batch):
         with torch.no_grad():
@@ -176,11 +196,13 @@ class BaseModel(nn.Module):
         history_sum = {}
         steps = len(data_loader)
         for batch_idx, batch in enumerate(data_loader):
+            is_last_step = (batch_idx + 1) >= steps
             batch = to_device(batch)
             info = self.validation_step(batch)
-            self.update_history(history, history_sum, info, batch_idx, steps)
+            self.update_history(history, history_sum, info, batch_idx + 1, epoch_end=is_last_step)
             if batch_idx % 1 == 0:
-                print(f'Evaluate: {batch_idx + 1}/{steps}  {epoch_info_to_string(history_sum, batch_idx)}', end='\r',
+                print(f'Evaluate: {batch_idx + 1}/{steps}  {epoch_info_to_string(history_sum, batch_idx + 1)}',
+                      end='\r',
                       file=sys.stdout,
                       flush=True)
         print()

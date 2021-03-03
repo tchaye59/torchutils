@@ -70,5 +70,5 @@ model.compile(loss=cross_entropy_focal_loss,
 
 if __name__ == '__main__':
     model.fit(train_loader,
-              epochs=20,
+              epochs=3,
               val_loader=val_loader)
