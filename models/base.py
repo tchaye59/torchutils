@@ -136,7 +136,7 @@ class BaseModel(nn.Module):
     def training_step(self, batch, accum_step, accum, losses={}, accum_mode=1):
         X, y_true = batch
         y_true = detach(y_true)
-        #X = detach(X)
+        X = detach(X)
 
         if accum_step == 0:
             self.optimizer.zero_grad()
