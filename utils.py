@@ -24,7 +24,7 @@ class RandomBalancedSampler():
         self.num_iter = 0
 
     def __iter__(self):
-        return iter(self.sample())
+        return iter([x for x in self.sample()])
 
     def __len__(self):
         return self.size // self.batch_size

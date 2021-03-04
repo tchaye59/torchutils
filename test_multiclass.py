@@ -23,9 +23,9 @@ labels = [y for _, y in train_ds]
 batch_size = 128
 
 train_loader = DataLoader(train_ds,
-                          batch_size,
-                          # batch_sampler=RandomBalancedSampler(list(range(len(labels))), labels, batch_size=batch_size),
-                          shuffle=True,
+                          # batch_size,
+                          batch_sampler=RandomBalancedSampler(list(range(len(labels))), labels, batch_size=batch_size),
+                          # shuffle=True,
                           num_workers=0, pin_memory=True)
 val_loader = DataLoader(val_ds, batch_size * 2, num_workers=4, pin_memory=True)
 
