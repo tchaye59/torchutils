@@ -83,7 +83,7 @@ class BaseModel(nn.Module):
 
             max_accum = accum
             for batch_idx, batch in enumerate(train_loader):
-                is_last_step = (batch_idx + 1) >= train_steps
+                # is_last_step = (batch_idx + 1) >= train_steps
                 accum_step = batch_idx % accum
                 if accum_step == 0:
                     max_accum = accum if batch_idx + accum < train_steps else train_steps - batch_idx
@@ -91,10 +91,11 @@ class BaseModel(nn.Module):
                 batch = to_device(batch)
                 losses, info = self.training_step(batch, accum_step, max_accum, losses=losses, accum_mode=accum_mode)
 
-                self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=is_last_step)
+                self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1)
 
                 print(f'Training: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',
                       end='\r', file=sys.stdout, flush=True)
+            self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=True)
             [callback.on_train_end(history) for callback in self.callbacks]
 
             # Validation
@@ -103,14 +104,15 @@ class BaseModel(nn.Module):
                 print()
                 [callback.on_test_begin(epoch, ) for callback in self.callbacks]
                 for batch_idx, batch in enumerate(val_loader):
-                    is_last_step = (batch_idx + 1) >= train_steps
+                    # is_last_step = (batch_idx + 1) >= train_steps
                     batch = to_device(batch)
                     info = self.validation_step(batch)
-                    self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=is_last_step)
+                    self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1)
                     print(
                         f'Validation: {batch_idx + 1}/{val_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',
                         end='\r',
                         file=sys.stdout, flush=True)
+                self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=True)
                 [callback.on_test_end(history) for callback in self.callbacks]
 
             [callback.on_epoch_end(epoch, history) for callback in self.callbacks]
@@ -136,7 +138,7 @@ class BaseModel(nn.Module):
     def training_step(self, batch, accum_step, accum, losses={}, accum_mode=1):
         X, y_true = batch
         y_true = detach(y_true)
-        #X = detach(X)
+        X = detach(X)
 
         if accum_step == 0:
             self.optimizer.zero_grad()
