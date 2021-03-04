@@ -51,6 +51,7 @@ class BaseModel(nn.Module):
     def predict(self, X):
         self.eval()
         with torch.no_grad():
+            X = to_device(X)
             return self(X)
 
     def compile(self, metrics={}, loss=None, optimizer=None, callbacks: List[Callback] = [], device=None):
