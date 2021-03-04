@@ -18,6 +18,13 @@ def to_device(data, device=None):
     return data.to(device, non_blocking=True)
 
 
+def detach(data, ):
+    """Detach Tensor from grad"""
+    if isinstance(data, (list, tuple)):
+        return [detach(x) for x in data]
+    return data.detach()
+
+
 def load_model(path, device=None, pickle_module=dill):
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -128,8 +135,8 @@ class BaseModel(nn.Module):
 
     def training_step(self, batch, accum_step, accum, losses={}, accum_mode=1):
         X, y_true = batch
-        y_true = y_true.detach()
-        X = X.detach()
+        y_true = detach(y_true)
+        X = detach(X)
 
         if accum_step == 0:
             self.optimizer.zero_grad()
