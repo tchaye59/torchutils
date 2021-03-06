@@ -4,7 +4,7 @@ from typing import List
 import dill
 import torch
 import torch.nn as nn
-from callbacks import Callback
+from torchutils.callbacks import Callback
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

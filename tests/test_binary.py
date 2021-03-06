@@ -7,12 +7,12 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 from torchvision import transforms as T
 
-from callbacks import ModelCheckpoint
-from losses import binary_cross_entropy_focal_loss
-from metrics import accuraty, binary_accuraty
-from models import BaseModel
+from torchutils.callbacks import ModelCheckpoint
+from torchutils.losses import binary_cross_entropy_focal_loss
+from torchutils.metrics import binary_accuraty
+from torchutils.models import BaseModel
 
-dataset = MNIST(root='data/', download=True, transform=ToTensor(),
+dataset = MNIST(root='data', download=True, transform=ToTensor(),
                 target_transform=T.Lambda(lambda y: torch.tensor([float(y == 8), ])), )
 
 val_size = 10000
@@ -57,7 +57,7 @@ model = MnistModel(input_size, hidden_size, num_classes)
 optim = torch.optim.Adam(model.parameters(), 0.001)
 
 callbacks = [
-    ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
+    ModelCheckpoint('../../model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
 model = model.compile(loss=binary_cross_entropy_focal_loss,

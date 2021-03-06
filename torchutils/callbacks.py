@@ -4,7 +4,7 @@ import dill
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from utils import BaseModel
+    from torchutils.models import BaseModel
 
 
 class Callback(object):

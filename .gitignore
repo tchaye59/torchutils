@@ -1,14 +1,5 @@
 /data/
-/model.pth
 /.idea/
 /.vscode/settings.json
-/head1_model.pth
-/head2_model.pth
-/head3_model.pth
-/head4_model.pth
-/head5_model.pth
-/head6_model.pth
-/head7_model.pth
-/head8_model.pth
-/head9_model.pth
-/head10_model.pth
+/tests/data/
+/tests/model.pth

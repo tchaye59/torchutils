@@ -5,13 +5,12 @@ from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-from torchvision import transforms as T
 
-from callbacks import ModelCheckpoint
-from losses import binary_cross_entropy_focal_loss, cross_entropy_focal_loss, binary_cross_entropy_weighted_focal_loss
-from metrics import accuraty, binary_accuraty
-from models.base import BaseModel
-from models.mlhydra import MLHydra
+from torchutils.callbacks import ModelCheckpoint
+from torchutils.losses import cross_entropy_focal_loss, binary_cross_entropy_weighted_focal_loss
+from torchutils.metrics import accuraty, binary_accuraty
+from torchutils.models import BaseModel
+from torchutils.models import MLHydra
 
 dataset = MNIST(root='data/', download=True, transform=ToTensor(), )
 
@@ -77,7 +76,7 @@ backbone = MnistModel(input_size, 32, num_classes)
 optim = torch.optim.Adam(backbone.parameters(), 0.001)
 
 callbacks = [
-    ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
+    ModelCheckpoint('../../model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
 backbone.compile(loss=lambda y_pred, y_true: cross_entropy_focal_loss(y_pred[0], y_true),
