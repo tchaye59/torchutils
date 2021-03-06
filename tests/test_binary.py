@@ -57,7 +57,7 @@ model = MnistModel(input_size, hidden_size, num_classes)
 optim = torch.optim.Adam(model.parameters(), 0.001)
 
 callbacks = [
-    ModelCheckpoint('../../model.pth', monitor='loss', mode='min', verbose=True)
+    ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
 model = model.compile(loss=binary_cross_entropy_focal_loss,

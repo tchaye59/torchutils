@@ -45,7 +45,7 @@ class Callback(object):
 class ModelCheckpoint(Callback):
     """Callback to save the model or model weights."""
 
-    def __init__(self, filepath, monitor='val_loss', verbose=True, save_weights_only=False, mode=''):
+    def __init__(self, filepath, monitor='val_loss', verbose=True, save_weights_only=True, mode=''):
         super(ModelCheckpoint, self).__init__()
         self.monitor = monitor
         self.verbose = verbose

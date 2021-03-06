@@ -31,6 +31,12 @@ def load_model(path, device=None, pickle_module=dill):
     return torch.load(path, pickle_module=pickle_module, map_location=torch.device(device))
 
 
+def load_weights(path, device=None, pickle_module=dill):
+    if device is None:
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    return torch.load(path, pickle_module=pickle_module, map_location=torch.device(device))
+
+
 def epoch_info_to_string(info, n_steps):
     return ' - '.join([f'{key}: {info[key].item() / n_steps:.3f}' for key in info])
 
