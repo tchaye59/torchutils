@@ -25,7 +25,14 @@ def detach(data, ):
     return data.detach()
 
 
+# deprecated
 def load_model(path, device=None, pickle_module=dill):
+    if device is None:
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    return torch.load(path, pickle_module=pickle_module, map_location=torch.device(device))
+
+
+def load(path, device=None, pickle_module=dill):
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
     return torch.load(path, pickle_module=pickle_module, map_location=torch.device(device))
@@ -48,8 +55,11 @@ class BaseModel(nn.Module):
     def forward(self, X):
         assert False, 'forward not defined'
 
-    def predict(self, X):
-        self.eval()
+    def predict(self, X, eval=True, no_grad=True):
+        if eval:
+            self.eval()
+        if not no_grad:
+            return self(X)
         with torch.no_grad():
             X = to_device(X)
             return self(X)
