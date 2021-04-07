@@ -149,6 +149,8 @@ class BaseModel(nn.Module):
     def training_step(self, batch, accum_step, accum, losses={}, accum_mode=1):
         X, y_true = batch
         y_true = detach(y_true)
+        if len(y_true.shape) == 1:
+            y_true = torch.unsqueeze(y_true, 1)
         X = detach(X)
 
         if accum_step == 0:

@@ -1,4 +1,4 @@
-torch~=1.7.1
-torchvision~=0.2.2.post3
+torch==1.8.1
+torchvision==0.9.1
 setuptools~=52.0.0
 dill~=0.3.3
