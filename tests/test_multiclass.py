@@ -8,9 +8,9 @@ from torchvision.transforms import ToTensor
 
 from torchutils import BaseModel
 from torchutils.utils import *
-from torchutils.callbacks import ModelCheckpoint
-from torchutils.losses import cross_entropy_focal_loss
-from torchutils.metrics import accuraty
+from torchutils.callbacks.callbacks import ModelCheckpoint
+from torchutils.losses.losses import cross_entropy_focal_loss
+from torchutils.metrics.metrics import accuraty
 
 dataset = MNIST(root='data/', download=True, transform=ToTensor())
 val_size = 10000

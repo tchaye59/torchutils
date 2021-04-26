@@ -6,9 +6,9 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from torchutils.callbacks import ModelCheckpoint
-from torchutils.losses import cross_entropy_focal_loss, binary_cross_entropy_weighted_focal_loss
-from torchutils.metrics import accuraty, binary_accuraty
+from torchutils.callbacks.callbacks import ModelCheckpoint
+from torchutils.losses.losses import cross_entropy_focal_loss, binary_cross_entropy_weighted_focal_loss
+from torchutils.metrics.metrics import accuraty, binary_accuraty
 from torchutils.models import BaseModel
 from torchutils.models import MLHydra
 

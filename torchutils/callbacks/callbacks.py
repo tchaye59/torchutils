@@ -69,10 +69,10 @@ class ModelCheckpoint(Callback):
 
         if self.verbose:
             if not comp:
-                print(f'\nEpoch {epoch + 1}: {self.monitor} did not improve from {prev_val:.3f}')
+                print(f'\nEpoch {epoch + 1}: {self.monitor} did not improve from {prev_val:.5f}')
             else:
                 print(
-                    f'\nEpoch {epoch + 1}: {self.monitor} improved from {prev_val:.3f} to {val:.3f}, saving model to {self.filepath}')
+                    f'\nEpoch {epoch + 1}: {self.monitor} improved from {prev_val:.5f} to {val:.5f}, saving model to {self.filepath}')
         # save the model
         if comp:
             self.last_value = val

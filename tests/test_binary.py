@@ -6,10 +6,10 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 from torchvision import transforms as T
-
-from torchutils.callbacks import ModelCheckpoint
-from torchutils.losses import binary_cross_entropy_focal_loss
-from torchutils.metrics import binary_accuraty
+import torchutils as U
+from torchutils.callbacks.callbacks import ModelCheckpoint
+from torchutils.losses.losses import binary_cross_entropy_focal_loss
+from torchutils.metrics.metrics import binary_accuraty
 from torchutils.models import BaseModel
 
 dataset = MNIST(root='data', download=True, transform=ToTensor(),
@@ -60,9 +60,9 @@ callbacks = [
     ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
-model = model.compile(loss=binary_cross_entropy_focal_loss,
+model = model.compile(loss=U.losses.binary_cross_entropy_focal_loss,
                       optimizer=optim,
-                      metrics={'acc': binary_accuraty},
+                      metrics={'acc': U.metrics.binary_accuraty},
                       callbacks=callbacks)
 
 model.fit(train_loader,

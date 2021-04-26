@@ -8,9 +8,9 @@ from torchvision.transforms import ToTensor
 from torchvision import transforms as T
 
 from torchutils import BaseModel
-from torchutils.callbacks import ModelCheckpoint
-from torchutils.losses import binary_cross_entropy_focal_loss
-from torchutils.metrics import binary_accuraty
+from torchutils.callbacks.callbacks import ModelCheckpoint
+from torchutils.losses.losses import binary_cross_entropy_focal_loss
+from torchutils.metrics.metrics import binary_accuraty
 
 dataset = MNIST(root='data/', download=True, transform=ToTensor(),
                 target_transform=T.Lambda(lambda y: torch.tensor([float(y == 8), float(y == 9),])), )

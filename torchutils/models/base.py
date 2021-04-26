@@ -4,7 +4,7 @@ from typing import List
 import dill
 import torch
 import torch.nn as nn
-from torchutils.callbacks import Callback
+from torchutils.callbacks.callbacks import Callback
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -39,7 +39,7 @@ def load(path, device=None, pickle_module=dill):
 
 
 def epoch_info_to_string(info, n_steps):
-    return ' - '.join([f'{key}: {info[key].item() / n_steps:.3f}' for key in info])
+    return ' - '.join([f'{key}: {info[key].item() / n_steps:.5f}' for key in info])
 
 
 class BaseModel(nn.Module):
@@ -88,6 +88,7 @@ class BaseModel(nn.Module):
             losses = {}
 
             print(f'Epoch: {epoch + 1}/{epochs}:')
+
             [callback.on_epoch_begin(epoch) for callback in self.callbacks]
             # Training
             [callback.on_train_begin() for callback in self.callbacks]
@@ -104,8 +105,8 @@ class BaseModel(nn.Module):
 
                 self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1)
 
-                print(f'Training: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',
-                      end='\r', file=sys.stdout, flush=True)
+                sys.stdout.write(f'\rTraining: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',)
+                sys.stdout.flush()
             self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=True)
             [callback.on_train_end(history) for callback in self.callbacks]
 
@@ -119,10 +120,8 @@ class BaseModel(nn.Module):
                     batch = to_device(batch)
                     info = self.validation_step(batch)
                     self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1)
-                    print(
-                        f'Validation: {batch_idx + 1}/{val_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',
-                        end='\r',
-                        file=sys.stdout, flush=True)
+                    sys.stdout.write(f'\rValidation: {batch_idx + 1}/{val_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}')
+                    sys.stdout.flush()
                 self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=True)
                 [callback.on_test_end(history) for callback in self.callbacks]
 
