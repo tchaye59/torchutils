@@ -240,3 +240,6 @@ class ModelWrapper(BaseModel):
 
     def forward(self, X):
         self.model(X)
+
+    def wrapped_model(self):
+        return self.model
