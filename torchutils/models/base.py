@@ -105,7 +105,8 @@ class BaseModel(nn.Module):
 
                 self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1)
 
-                sys.stdout.write(f'\rTraining: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}',)
+                sys.stdout.write(
+                    f'\rTraining: {batch_idx + 1}/{train_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}', )
                 sys.stdout.flush()
             self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=True)
             [callback.on_train_end(history) for callback in self.callbacks]
@@ -120,7 +121,8 @@ class BaseModel(nn.Module):
                     batch = to_device(batch)
                     info = self.validation_step(batch)
                     self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1)
-                    sys.stdout.write(f'\rValidation: {batch_idx + 1}/{val_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}')
+                    sys.stdout.write(
+                        f'\rValidation: {batch_idx + 1}/{val_steps}  {epoch_info_to_string(epoch_info_sum, batch_idx + 1)}')
                     sys.stdout.flush()
                 self.update_history(history, epoch_info_sum, info, n_steps=batch_idx + 1, epoch_end=True)
                 [callback.on_test_end(history) for callback in self.callbacks]
@@ -228,3 +230,13 @@ class BaseModel(nn.Module):
                       flush=True)
         print()
         return history
+
+
+class ModelWrapper(BaseModel):
+
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, X):
+        self.model(X)
