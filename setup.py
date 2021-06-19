@@ -9,13 +9,13 @@ with open("LICENSE", "r", encoding="utf-8") as f:
 
 setup(
     name='torchutils',
-    version='0.0.1',
+    version='0.0.2',
     packages=setuptools.find_packages(),
     url='https://github.com/tchaye59/torchutils',
     license=LICENSE,
     author='Jude TCHAYE',
     author_email='tchaye59@gmail.com',
-    description='My torch models training utilities',
+    description='My torch training utilities',
     long_description=long_description,
     long_description_content_type="text/markdown",
 )
