@@ -239,7 +239,7 @@ class ModelWrapper(BaseModel):
         self.model = model
 
     def forward(self, X):
-        self.model(X)
+        return self.model(X)
 
     def wrapped_model(self):
         return self.model
