@@ -3,12 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
+from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-from torchvision import transforms as T
+
 import torchutils as U
 from torchutils.callbacks.callbacks import ModelCheckpoint
-from torchutils.losses.losses import binary_cross_entropy_focal_loss
 from torchutils.metrics.metrics import binary_accuraty
 from torchutils.models import BaseModel
 
@@ -54,19 +54,19 @@ hidden_size = 32
 num_classes = 1
 model = MnistModel(input_size, hidden_size, num_classes)
 
-optim = torch.optim.Adam(model.parameters(), 0.001)
+optim = torch.optim.Adam(model.parameters(), 0.0001)
 
 callbacks = [
     ModelCheckpoint('model.pth', monitor='loss', mode='min', verbose=True)
 ]
 
-model = model.compile(loss=U.losses.binary_cross_entropy_focal_loss,
+model = model.compile(loss=F.binary_cross_entropy,
                       optimizer=optim,
                       metrics={'acc': U.metrics.binary_accuraty},
                       callbacks=callbacks)
 
 model.fit(train_loader,
-          epochs=5,
+          epochs=2,
           val_loader=val_loader)
 
 model.evaluate(train_loader)

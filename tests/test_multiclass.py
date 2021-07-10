@@ -30,6 +30,9 @@ train_loader = DataLoader(train_ds,
                           num_workers=0, pin_memory=True)
 val_loader = DataLoader(val_ds, batch_size * 2, num_workers=4, pin_memory=True)
 
+for x in train_loader:
+    break
+
 
 class MnistModel(BaseModel):
     """Feedfoward neural network with 1 hidden layer"""
@@ -64,7 +67,7 @@ callbacks = [
     ModelCheckpoint('model.pth', monitor='acc', mode='max', verbose=True)
 ]
 
-model.compile(loss=cross_entropy_focal_loss,
+model.compile(loss=lambda y_pred, y_true: F.cross_entropy(y_pred, y_true.view(-1)),
               optimizer=optim,
               metrics={'acc': accuraty},
               callbacks=callbacks)

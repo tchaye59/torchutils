@@ -62,7 +62,8 @@ class ModelCheckpoint(Callback):
             return val < prev_val
 
     def on_epoch_end(self, epoch, logs=None):
-        assert self.monitor in logs, f'{self.monitor} not found'
+        if not self.monitor in logs:
+            return
         prev_val = self.last_value
         val = logs[self.monitor][-1]
         comp = self.compare(prev_val, val)
@@ -71,8 +72,7 @@ class ModelCheckpoint(Callback):
             if not comp:
                 print(f'\nEpoch {epoch + 1}: {self.monitor} did not improve from {prev_val:.5f}')
             else:
-                print(
-                    f'\nEpoch {epoch + 1}: {self.monitor} improved from {prev_val:.5f} to {val:.5f}, saving model to {self.filepath}')
+                print(f'\nEpoch {epoch + 1}: {self.monitor} improved from {prev_val:.5f} to {val:.5f}, saving model to {self.filepath}')
         # save the model
         if comp:
             self.last_value = val
