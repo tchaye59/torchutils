@@ -39,5 +39,5 @@ def binary_accuraty(y_pred, y_true, treshold=0.5):
 
 def accuraty(y_pred, y_true):
     with torch.no_grad():
-        _, y_pred = torch.max(y_pred, -1)
+        y_pred = torch.argmax(y_pred, -1)
         return (y_true.view(-1) == y_pred.view(-1)).sum() / y_pred.numel()
