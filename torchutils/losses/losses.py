@@ -2,13 +2,16 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from torchutils import to_device
+
 
 class FocalLoss(nn.Module):
     """weighted version of Focal Loss"""
 
-    def __init__(self, alpha=.25, gamma=2):
+    def __init__(self, alpha=.25, gamma=2, device=None):
         super(FocalLoss, self).__init__()
         self.alpha = torch.tensor([alpha, 1 - alpha])
+        self.alpha = to_device(self.alpha, device=device)
         self.gamma = gamma
 
     def forward(self, inputs, targets):

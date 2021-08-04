@@ -6,11 +6,9 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-
-import torchutils as U
 from torchutils.callbacks.callbacks import ModelCheckpoint
 from torchutils.losses import binary_cross_entropy_weighted_focal_loss
-from torchutils.metrics import accuracy, binary_accuracy
+from torchutils.metrics import binary_accuracy
 from torchutils.models import BaseModel
 
 dataset = MNIST(root='data', download=True, transform=ToTensor(),
