@@ -244,6 +244,7 @@ class BaseModel(nn.Module):
             self.update_history()
             sys.stdout.write(f'\rEvaluate: {batch_idx + 1}/{steps}  {metrics_to_string(self.metrics)}')
             sys.stdout.flush()
+        print()
         return self.history
 
 

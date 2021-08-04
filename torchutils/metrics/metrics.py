@@ -31,13 +31,13 @@ class Means:
         return dict([(k, self.means[k].getValue()) for k in self.means])
 
 
-def binary_accuraty(y_pred, y_true, treshold=0.5):
+def binary_accuracy(y_pred, y_true, treshold=0.5):
     with torch.no_grad():
         y_pred = y_pred > treshold
         return (y_pred.view(-1) == y_true.view(-1)).sum() / y_true.numel()
 
 
-def accuraty(y_pred, y_true):
+def accuracy(y_pred, y_true):
     with torch.no_grad():
         y_pred = torch.argmax(y_pred, -1)
         return (y_true.view(-1) == y_pred.view(-1)).sum() / y_pred.numel()
