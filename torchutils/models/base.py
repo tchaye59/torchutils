@@ -71,6 +71,7 @@ class BaseModel(nn.Module):
         self.metrics = {}
         self.history = {}
         self.callbacks: List[Callback] = []
+        self.device = None
 
     def forward(self, X):
         assert False, 'forward not defined'
@@ -89,6 +90,7 @@ class BaseModel(nn.Module):
         self.loss_fn = loss
         self.optimizer = optimizer
         self.callbacks = callbacks
+        self.device = device
         [callback.set_model(self) for callback in callbacks]
         return to_device(self, device)
 
@@ -119,7 +121,7 @@ class BaseModel(nn.Module):
                 if accum_step == 0:
                     max_accum = accum if batch_idx + accum < train_steps else train_steps - batch_idx
 
-                batch = to_device(batch)
+                batch = to_device(batch, device=self.device)
                 losses, info = self.training_step(batch, accum_step, max_accum, losses=losses, accum_mode=accum_mode)
                 self.update_metrics(info)
 
