@@ -2,6 +2,7 @@ import torch
 import dill
 
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 if TYPE_CHECKING:
     from torchutils.models import BaseModel
@@ -54,6 +55,9 @@ class ModelCheckpoint(Callback):
         assert mode in ['min', 'max'], 'Invalid mode'
         self.mode = mode
         self.last_value = float('-inf') if mode == 'max' else float('inf')
+        # Create checkpoint path
+        target_path = Path(filepath).parent
+        target_path.mkdir(parents=True, exist_ok=True)
 
     def compare(self, prev_val, val):
         if self.mode == 'max':
@@ -72,7 +76,8 @@ class ModelCheckpoint(Callback):
             if not comp:
                 print(f'\nEpoch {epoch + 1}: {self.monitor} did not improve from {prev_val:.5f}')
             else:
-                print(f'\nEpoch {epoch + 1}: {self.monitor} improved from {prev_val:.5f} to {val:.5f}, saving model to {self.filepath}')
+                print(
+                    f'\nEpoch {epoch + 1}: {self.monitor} improved from {prev_val:.5f} to {val:.5f}, saving model to {self.filepath}')
         # save the model
         if comp:
             self.last_value = val
