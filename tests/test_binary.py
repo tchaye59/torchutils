@@ -6,13 +6,15 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-from torchutils.callbacks.callbacks import ModelCheckpoint
+
+from torchutils.callbacks import ProgressBar
 from torchutils.losses import binary_cross_entropy_weighted_focal_loss
-from torchutils.metrics import binary_accuracy
 from torchutils.models import BaseModel
+import torchmetrics as tm
+import pytorch_lightning as pl
 
 dataset = MNIST(root='data', download=True, transform=ToTensor(),
-                target_transform=T.Lambda(lambda y: torch.tensor([float(y == 8), ])), )
+                target_transform=T.Lambda(lambda y: torch.tensor([int(y == 8), ])), )
 
 val_size = 10000
 train_size = len(dataset) - val_size
@@ -24,6 +26,9 @@ batch_size = 128
 
 train_loader = DataLoader(train_ds, batch_size, shuffle=True, num_workers=0, pin_memory=True)
 val_loader = DataLoader(val_ds, batch_size * 2, num_workers=0, pin_memory=True)
+
+for x, y in train_loader:
+    break
 
 
 class MnistModel(BaseModel):
@@ -56,16 +61,13 @@ model = MnistModel(input_size, hidden_size, num_classes)
 optim = torch.optim.Adam(model.parameters(), 0.0001)
 
 callbacks = [
-    ModelCheckpoint('jude/le/cul/model.pth', monitor='loss', mode='min', verbose=True)
+    ProgressBar()
 ]
+model.compile(loss=binary_cross_entropy_weighted_focal_loss,
+              optimizer=optim,
+              metrics={'acc': tm.Accuracy()})
 
-model = model.compile(loss=binary_cross_entropy_weighted_focal_loss,
-                      optimizer=optim,
-                      metrics={'acc': binary_accuracy},
-                      callbacks=callbacks)
+trainer = pl.Trainer(max_epochs=2,callbacks=callbacks)
+trainer.fit(model, train_loader, val_loader)
 
-model.fit(train_loader,
-          epochs=10,
-          val_loader=val_loader)
-
-model.evaluate(train_loader)
+print(model.history)
