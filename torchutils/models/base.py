@@ -138,7 +138,6 @@ class BaseModel(pl.LightningModule):
             # update history
             self.update_history(name, value)
             tracker.reset()
-        print("Train end")
 
     def reset_state(self):
         self.history = {}
