@@ -11,6 +11,7 @@ from torchutils.losses import binary_cross_entropy_weighted_focal_loss
 from torchutils.models import BaseModel
 import torchmetrics as tm
 import pytorch_lightning as pl
+import pandas as df
 
 dataset = MNIST(root='data', download=True, transform=ToTensor(),
                 target_transform=T.Lambda(lambda y: torch.tensor([int(y == 8), ])), )
@@ -66,10 +67,10 @@ model.compile(loss=binary_cross_entropy_weighted_focal_loss,
               optimizer=optim,
               metrics={'acc': tm.Accuracy(multiclass=False)})
 
-trainer = pl.Trainer(max_epochs=10, callbacks=callbacks)
+trainer = pl.Trainer(logger=False, max_epochs=2, callbacks=callbacks)
 trainer.fit(model, train_loader, val_loader)
 
-# test (pass in the loader)
-trainer.test(model=model, dataloaders=val_loader)
+print(model.get_history())
 
-print(model.history)
+# test (pass in the loader)
+# trainer.test(model=model, dataloaders=val_loader)

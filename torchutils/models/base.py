@@ -94,6 +94,9 @@ class BaseModel(pl.LightningModule):
         value = value.cpu().detach().numpy()
         self.history[name].append(float(value))
 
+    def on_fit_start(self) -> None:
+        self.reset_state()
+
     def training_step(self, batch, batch_idx):
         # training_step defined the train loop.
         x, y = batch
@@ -135,9 +138,21 @@ class BaseModel(pl.LightningModule):
             # update history
             self.update_history(name, value)
             tracker.reset()
+        print("Train end")
 
-    def reset_history(self):
+    def reset_state(self):
         self.history = {}
+        for _, item in self.metrics.items():
+            item.reset()
+        for _, item in self.val_metrics.items():
+            item.reset()
+        for _, item in self.trackers.items():
+            item.reset()
+
+    def get_history(self):
+        min_size = min([len(self.history[key]) for key in self.history])
+        history = [(key, item[-min_size:]) for key, item in self.history.items()]
+        return dict(history)
 
     def on_epoch_start(self):
         print('\n')
@@ -165,7 +180,7 @@ class BaseModel(pl.LightningModule):
             self.log(f"val_{name}", self.val_metrics[name](y_pred, y), on_epoch=True, prog_bar=True, sync_dist=True)
 
     def test_step(self, batch, batch_idx):
-        self.reset_history()
+        self.reset_state()
         self.validation_step(batch, batch_idx)
 
     def on_validation_epoch_end(self) -> None:
