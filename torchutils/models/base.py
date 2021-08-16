@@ -1,4 +1,5 @@
 import copy
+import sys
 from typing import Optional
 
 import dill
@@ -41,7 +42,7 @@ def load(path, device=None, pickle_module=dill):
 
 
 def metrics_to_string(metrics):
-    return ' - '.join([f'{key}: {metrics[key].get() :.5f}' for key in metrics])
+    return ' - '.join([f'{key}: {metrics[key].compute() :.5f}' for key in metrics])
 
 
 class BaseModel(pl.LightningModule):
@@ -53,6 +54,11 @@ class BaseModel(pl.LightningModule):
         self.optimizer = None
         self.history = {}
         self.trackers = {}
+
+    def predict(self, X):
+        with torch.no_grad():
+            X = to_device(X)
+            return self(X)
 
     def compile(self, metrics={}, loss=None, optimizer=None):
         # Losses
@@ -130,6 +136,9 @@ class BaseModel(pl.LightningModule):
             self.update_history(name, value)
             tracker.reset()
 
+    def reset_history(self):
+        self.history = {}
+
     def on_epoch_start(self):
         print('\n')
 
@@ -155,6 +164,10 @@ class BaseModel(pl.LightningModule):
         for name in self.val_metrics:
             self.log(f"val_{name}", self.val_metrics[name](y_pred, y), on_epoch=True, prog_bar=True, sync_dist=True)
 
+    def test_step(self, batch, batch_idx):
+        self.reset_history()
+        self.validation_step(batch, batch_idx)
+
     def on_validation_epoch_end(self) -> None:
         # def training_epoch_end(self, outs):
         # log epoch metric
@@ -175,6 +188,9 @@ class BaseModel(pl.LightningModule):
             # update history
             self.update_history(name, value)
             tracker.reset()
+
+    def on_test_epoch_end(self) -> None:
+        self.on_validation_epoch_end()
 
     def configure_optimizers(self):
         return self.optimizer

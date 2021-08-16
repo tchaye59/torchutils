@@ -3,3 +3,4 @@
 /.vscode/settings.json
 /tests/data/
 /tests/model.pth
+/tests/lightning_logs/

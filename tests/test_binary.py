@@ -3,11 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
+from torchmetrics.utilities.enums import DataType
 from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-
-from torchutils.callbacks import ProgressBar
 from torchutils.losses import binary_cross_entropy_weighted_focal_loss
 from torchutils.models import BaseModel
 import torchmetrics as tm
@@ -61,13 +60,16 @@ model = MnistModel(input_size, hidden_size, num_classes)
 optim = torch.optim.Adam(model.parameters(), 0.0001)
 
 callbacks = [
-    ProgressBar()
+    # ProgressBar()
 ]
 model.compile(loss=binary_cross_entropy_weighted_focal_loss,
               optimizer=optim,
-              metrics={'acc': tm.Accuracy()})
+              metrics={'acc': tm.Accuracy(multiclass=False)})
 
-trainer = pl.Trainer(max_epochs=2,callbacks=callbacks)
+trainer = pl.Trainer(max_epochs=10, callbacks=callbacks)
 trainer.fit(model, train_loader, val_loader)
+
+# test (pass in the loader)
+trainer.test(model=model, dataloaders=val_loader)
 
 print(model.history)
