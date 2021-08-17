@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import Metric
 
-from torchutils.layers import LambdaModule
+from torchutils.layers import Lambda
 from torchutils.metrics import MeanMetric, LambdaMetric
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -66,11 +66,11 @@ class BaseModel(pl.LightningModule):
         if type(loss) == dict:
             for key, fn in loss.items():
                 if not isinstance(fn, torch.nn.Module):
-                    loss[key] = LambdaModule(fn)
+                    loss[key] = Lambda(fn)
             self.losses.update(loss)
         else:
             if not isinstance(loss, torch.nn.Module):
-                loss = LambdaModule(loss)
+                loss = Lambda(loss)
             self.losses['loss'] = loss
 
         # optimizer

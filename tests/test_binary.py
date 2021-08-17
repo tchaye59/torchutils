@@ -1,17 +1,16 @@
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchmetrics as tm
 from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
-from torchmetrics.utilities.enums import DataType
 from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
+
 from torchutils.losses import binary_cross_entropy_weighted_focal_loss
 from torchutils.models import BaseModel
-import torchmetrics as tm
-import pytorch_lightning as pl
-import pandas as df
 
 dataset = MNIST(root='data', download=True, transform=ToTensor(),
                 target_transform=T.Lambda(lambda y: torch.tensor([int(y == 8), ])), )

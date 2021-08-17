@@ -20,8 +20,8 @@ class LambdaMetric(Metric):
 
         value = self.metric_fn(preds, target)
 
-        self.correct += value
-        self.total += value.numel()
+        self.correct = value if self.correct == 0 else self.correct + value
+        self.total = value.numel() if self.total == 0 else self.total + value.numel()
 
     def compute(self):
         # compute final result
