@@ -21,7 +21,7 @@ class LambdaMetric(Metric):
         value = self.metric_fn(preds, target)
 
         self.correct = value if self.correct == 0 else self.correct + value
-        self.total = value.numel() if self.total == 0 else self.total + value.numel()
+        self.total += value.numel()
 
     def compute(self):
         # compute final result
@@ -39,7 +39,7 @@ class MeanMetric(Metric):
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
 
     def update(self, value):
-        self.total_sum += value
+        self.total_sum = value if self.total_sum == 0 else self.total_sum + value
         self.count += value.numel()
 
     def compute(self):
