@@ -8,7 +8,6 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
-
 from torchutils.losses import binary_cross_entropy_weighted_focal_loss
 from torchutils.models import BaseModel
 
@@ -60,11 +59,10 @@ model = MnistModel(input_size, hidden_size, num_classes)
 optim = torch.optim.Adam(model.parameters(), 0.0001)
 
 callbacks = [
-    # ProgressBar()
 ]
 model.compile(loss=binary_cross_entropy_weighted_focal_loss,
               optimizer=optim,
-              metrics={'acc': tm.Accuracy(multiclass=False)})
+              metrics={'acc': tm.Accuracy()})
 
 trainer = pl.Trainer(logger=False, max_epochs=2, callbacks=callbacks)
 trainer.fit(model, train_loader, val_loader)

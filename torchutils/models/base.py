@@ -52,6 +52,7 @@ class BaseModel(pl.LightningModule):
         self.optimizer = None
         self.history = {}
         self.trackers = torch.nn.ModuleDict()
+        self.logs = {}
 
     def predict(self, X):
         with torch.no_grad():
@@ -104,6 +105,7 @@ class BaseModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         # training_step defined the train loop.
+        logs = {}
         x, y = batch
         y_pred = self(x)
         # Compute the loss
@@ -113,6 +115,7 @@ class BaseModel(pl.LightningModule):
             losses.append(value)
             self.log(name, value)
             self.update_trackers(name, value)
+            logs[name] = value
 
         loss = torch.stack(losses).mean()
         # Logging to TensorBoard by default
@@ -120,9 +123,13 @@ class BaseModel(pl.LightningModule):
         if len(self.losses) > 1:
             self.log("loss", loss)
             self.update_trackers("loss", loss)
+            logs["loss"] = loss
         # Log metrics
         for name in self.metrics:
-            self.log(name, self.metrics[name](y_pred, y), on_epoch=True, prog_bar=True, sync_dist=True)
+            value = self.metrics[name](y_pred, y)
+            self.log(name, value, on_epoch=True, prog_bar=True, sync_dist=True)
+            logs[name] = value
+        self.logs = logs
         return loss
 
     def on_train_epoch_end(self, unused: Optional = None) -> None:
@@ -163,6 +170,7 @@ class BaseModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         # training_step defined the train loop.
+        logs = {}
         x, y = batch
         y_pred = self(x)
         # Compute the loss
@@ -172,6 +180,7 @@ class BaseModel(pl.LightningModule):
             losses.append(value)
             self.log(f"val_{name}", value, on_epoch=True, prog_bar=True, sync_dist=True)
             self.update_trackers(f"val_{name}", value)
+            logs[f"val_{name}"] = value
 
         loss = torch.stack(losses).mean()
         # Logging to TensorBoard by default
@@ -179,9 +188,13 @@ class BaseModel(pl.LightningModule):
         if len(self.losses) > 1:
             self.log("val_loss", loss, on_epoch=True, prog_bar=True, sync_dist=True)
             self.update_trackers("val_loss", loss)
+            logs["val_loss"] = loss
         # Log metrics
         for name in self.val_metrics:
-            self.log(f"val_{name}", self.val_metrics[name](y_pred, y), on_epoch=True, prog_bar=True, sync_dist=True)
+            value = self.val_metrics[name](y_pred, y)
+            self.log(f"val_{name}", value, on_epoch=True, prog_bar=True, sync_dist=True)
+            logs[f"val_{name}"] = value
+        self.logs = logs
 
     def test_step(self, batch, batch_idx):
         self.reset_state()
