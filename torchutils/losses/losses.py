@@ -11,7 +11,7 @@ class FocalLoss(nn.Module):
     def __init__(self, alpha=.25, gamma=2, device=None):
         super(FocalLoss, self).__init__()
         self.alpha = torch.tensor([alpha, 1 - alpha])
-        self.alpha = to_device(self.alpha, device=device)
+        # self.alpha = to_device(self.alpha, device=device)
         self.gamma = gamma
 
     def forward(self, inputs, targets):
