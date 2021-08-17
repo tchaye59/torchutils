@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import Metric
 
+from torchutils.layers import LambdaModule
 from torchutils.metrics import MeanMetric, LambdaMetric
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -48,12 +49,12 @@ def metrics_to_string(metrics):
 class BaseModel(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        self.metrics = {}
-        self.val_metrics = {}
-        self.losses = {}
+        self.metrics = torch.nn.ModuleDict()
+        self.val_metrics = torch.nn.ModuleDict()
+        self.losses = torch.nn.ModuleDict()
         self.optimizer = None
         self.history = {}
-        self.trackers = {}
+        self.trackers = torch.nn.ModuleDict()
 
     def predict(self, X):
         with torch.no_grad():
@@ -63,8 +64,13 @@ class BaseModel(pl.LightningModule):
     def compile(self, metrics={}, loss=None, optimizer=None):
         # Losses
         if type(loss) == dict:
+            for key, fn in loss.items():
+                if not isinstance(fn, torch.nn.Module):
+                    loss[key] = LambdaModule(fn)
             self.losses.update(loss)
         else:
+            if not isinstance(loss, torch.nn.Module):
+                loss = LambdaModule(loss)
             self.losses['loss'] = loss
 
         # optimizer
@@ -72,13 +78,15 @@ class BaseModel(pl.LightningModule):
         if self.optimizer is None:
             self.optimizer = torch.optim.Adam(self.parameters(), 0.001)
         # Metrics
+        tmp_metrics = {}
         if metrics:
             for key in metrics:
                 metric = metrics[key]
                 if not isinstance(metric, Metric):
                     metric = LambdaMetric(metric)
-                self.metrics[key] = metric
-        self.val_metrics = copy.deepcopy(self.metrics)
+                tmp_metrics[key] = metric
+        self.metrics.update(tmp_metrics)
+        self.val_metrics.update(copy.deepcopy(tmp_metrics))
         return self
 
     def update_trackers(self, name, value):

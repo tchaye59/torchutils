@@ -15,7 +15,7 @@ class LambdaMetric(Metric):
 
     def update(self, preds: torch.Tensor, target: torch.Tensor):
         # update metric states
-        preds, target = self._input_format(preds, target)
+        # preds, target = self._input_format(preds, target)
         assert preds.shape == target.shape
 
         value = self.metric_fn(preds, target)
