@@ -1,12 +1,9 @@
 import copy
-import sys
 from typing import Optional
-
 import dill
 import pytorch_lightning as pl
 import torch
 from torchmetrics import Metric
-
 from torchutils.layers import Lambda
 from torchutils.metrics import MeanMetric, LambdaMetric
 
