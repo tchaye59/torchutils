@@ -3,7 +3,7 @@ from typing import Optional
 import dill
 import pytorch_lightning as pl
 import torch
-from torchmetrics import Metric
+from torchmetrics import Metric, StatScores
 from torchutils.layers import Lambda
 from torchutils.metrics import MeanMetric, LambdaMetric
 
@@ -126,9 +126,15 @@ class BaseModel(pl.LightningModule):
             logs["loss"] = loss
         # Log metrics
         for name in self.metrics:
-            value = self.metrics[name](y_pred, y)
-            self.log(name, value, on_epoch=True, prog_bar=True, sync_dist=True)
-            logs[name] = value
+            metric = self.metrics[name]
+            value = metric(y_pred, y)
+            if type(metric) == StatScores:
+                for tmp_name, val in zip(['tp', 'fp', 'tn', 'fn'], value):
+                    self.log(f"val_{tmp_name}", val, on_epoch=True, prog_bar=True, sync_dist=True)
+                    logs[f"val_{tmp_name}"] = val
+            else:
+                self.log(name, value, on_epoch=True, prog_bar=True, sync_dist=True)
+                logs[name] = value
         self.logs = logs
         return loss
 
@@ -138,9 +144,15 @@ class BaseModel(pl.LightningModule):
         for name in self.metrics:
             metric = self.metrics[name]
             value = metric.compute()
-            self.log(name, value)
-            # update history
-            self.update_history(name, value)
+
+            if type(metric) == StatScores:
+                for tmp_name, val in zip(['tp', 'fp', 'tn', 'fn'], value):
+                    self.log(f"{tmp_name}", val, on_epoch=True, prog_bar=True, sync_dist=True)
+                    self.update_history(f"{tmp_name}", val)
+            else:
+                self.log(name, value)
+                # update history
+                self.update_history(name, value)
             metric.reset()
         # losses
         for name in self.losses:
@@ -191,9 +203,16 @@ class BaseModel(pl.LightningModule):
             logs["val_loss"] = loss
         # Log metrics
         for name in self.val_metrics:
-            value = self.val_metrics[name](y_pred, y)
-            self.log(f"val_{name}", value, on_epoch=True, prog_bar=True, sync_dist=True)
-            logs[f"val_{name}"] = value
+            metric = self.val_metrics[name]
+            value = metric(y_pred, y)
+            if type(metric) == StatScores:
+                for tmp_name, val in zip(['tp', 'fp', 'tn', 'fn'], value):
+                    self.log(f"val_{tmp_name}", val, on_epoch=True, prog_bar=True, sync_dist=True)
+                    logs[f"val_{tmp_name}"] = val
+            else:
+                value = metric(y_pred, y)
+                self.log(f"val_{name}", value, on_epoch=True, prog_bar=True, sync_dist=True)
+                logs[f"val_{name}"] = value
         self.logs = logs
 
     def test_step(self, batch, batch_idx):
@@ -207,9 +226,16 @@ class BaseModel(pl.LightningModule):
             metric = self.val_metrics[name]
             value = metric.compute()
             name = f"val_{name}"
-            self.log(name, value)
-            # update history
-            self.update_history(name, value)
+
+            if type(metric) == StatScores:
+                for tmp_name, val in zip(['tp', 'fp', 'tn', 'fn'], value):
+                    name = f"val_{tmp_name}"
+                    self.log(name, val, on_epoch=True, prog_bar=True, sync_dist=True)
+                    self.update_history(name, val)
+            else:
+                self.log(name, value)
+                # update history
+                self.update_history(name, value)
             metric.reset()
         # losses
         for name in self.losses:

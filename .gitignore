@@ -5,3 +5,4 @@
 /tests/model.pth
 /tests/lightning_logs/
 /tests/checkpoints/
+/tests/pretrained.csv

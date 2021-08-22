@@ -1,3 +1,6 @@
+import os
+
+import pandas as pd
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -60,14 +63,26 @@ optim = torch.optim.Adam(model.parameters(), 0.0001)
 
 callbacks = [
 ]
+
+metrics = {
+    "acc": tm.Accuracy(),
+    'precision': tm.Precision(),
+    'recall': tm.Recall(),
+    'f1': tm.F1(),
+    'satet': tm.StatScores(),
+}
+
 model.compile(loss=binary_cross_entropy_weighted_focal_loss,
               optimizer=optim,
-              metrics={'acc': tm.Accuracy()})
+              metrics=metrics)
 
-trainer = pl.Trainer(logger=False, max_epochs=2, callbacks=callbacks)
+trainer = pl.Trainer(logger=False, max_epochs=10, callbacks=callbacks)
 trainer.fit(model, train_loader, val_loader)
 
 print(model.get_history())
+
+df = pd.DataFrame(model.get_history())
+df.to_csv('pretrained.csv', index=False)
 
 # test (pass in the loader)
 # trainer.test(model=model, dataloaders=val_loader)
