@@ -12,6 +12,7 @@ from torchvision import transforms as T
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 from torchutils.losses import binary_cross_entropy_weighted_focal_loss
+from torchutils.metrics import accuracy, binary_accuracy
 from torchutils.models import BaseModel
 
 dataset = MNIST(root='data', download=True, transform=ToTensor(),
@@ -69,14 +70,14 @@ metrics = {
     'precision': tm.Precision(),
     'recall': tm.Recall(),
     'f1': tm.F1(),
-    'satet': tm.StatScores(),
+    # 'ss': tm.StatScores(),
 }
 
 model.compile(loss=binary_cross_entropy_weighted_focal_loss,
               optimizer=optim,
               metrics=metrics)
 
-trainer = pl.Trainer(logger=False, max_epochs=10, callbacks=callbacks)
+trainer = pl.Trainer(logger=False, max_epochs=5, callbacks=callbacks)
 trainer.fit(model, train_loader, val_loader)
 
 print(model.get_history())

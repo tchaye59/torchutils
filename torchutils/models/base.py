@@ -91,8 +91,8 @@ class BaseModel(pl.LightningModule):
         if name not in self.trackers:
             self.trackers[name] = MeanMetric()
         tracker = self.trackers[name]
-        # tracker.update(value)
-        tracker(value)
+        tracker.update(value)
+        return tracker.compute()
 
     def update_history(self, name, value):
         if name not in self.history:
@@ -113,25 +113,25 @@ class BaseModel(pl.LightningModule):
         for name in self.losses:
             value = self.losses[name](y_pred, y)
             losses.append(value)
+            value = self.update_trackers(name, value)
             self.log(name, value)
-            self.update_trackers(name, value)
             logs[name] = value
-
         loss = torch.stack(losses).mean()
         # Logging to TensorBoard by default
         # Log losses
         if len(self.losses) > 1:
-            self.log("loss", loss)
-            self.update_trackers("loss", loss)
-            logs["loss"] = loss
+            value = self.update_trackers("loss", loss)
+            self.log("loss", value)
+            logs["loss"] = value
         # Log metrics
         for name in self.metrics:
             metric = self.metrics[name]
-            value = metric(y_pred, y)
+            metric.update(y_pred, y)
+            value = metric.compute()
             if type(metric) == StatScores:
                 for tmp_name, val in zip(['tp', 'fp', 'tn', 'fn'], value):
-                    self.log(f"val_{tmp_name}", val, on_epoch=True, prog_bar=True, sync_dist=True)
-                    logs[f"val_{tmp_name}"] = val
+                    self.log(tmp_name, val, on_epoch=True, prog_bar=True, sync_dist=True)
+                    logs[tmp_name] = val
             else:
                 self.log(name, value, on_epoch=True, prog_bar=True, sync_dist=True)
                 logs[name] = value
@@ -189,28 +189,28 @@ class BaseModel(pl.LightningModule):
         losses = []
         for name in self.losses:
             value = self.losses[name](y_pred, y)
+            value = self.update_trackers(f"val_{name}", value)
             losses.append(value)
             self.log(f"val_{name}", value, on_epoch=True, prog_bar=True, sync_dist=True)
-            self.update_trackers(f"val_{name}", value)
             logs[f"val_{name}"] = value
 
         loss = torch.stack(losses).mean()
         # Logging to TensorBoard by default
         # Log losses
         if len(self.losses) > 1:
+            loss = self.update_trackers("val_loss", loss)
             self.log("val_loss", loss, on_epoch=True, prog_bar=True, sync_dist=True)
-            self.update_trackers("val_loss", loss)
             logs["val_loss"] = loss
         # Log metrics
         for name in self.val_metrics:
             metric = self.val_metrics[name]
-            value = metric(y_pred, y)
+            metric.update(y_pred, y)
+            value = metric.compute()
             if type(metric) == StatScores:
                 for tmp_name, val in zip(['tp', 'fp', 'tn', 'fn'], value):
                     self.log(f"val_{tmp_name}", val, on_epoch=True, prog_bar=True, sync_dist=True)
                     logs[f"val_{tmp_name}"] = val
             else:
-                value = metric(y_pred, y)
                 self.log(f"val_{name}", value, on_epoch=True, prog_bar=True, sync_dist=True)
                 logs[f"val_{name}"] = value
         self.logs = logs
